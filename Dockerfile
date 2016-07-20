@@ -30,7 +30,7 @@ RUN apt-get update && \
 RUN apt-get -y install curl apache2 supervisor openssh-client make libpcre3-dev git
 RUN apt-get -y install php php-fpm php-gd php-mysql php-curl php-cli php-common libapache2-mod-php php-dev php-mbstring
 
-RUN apt-get -y install bash-completion zip
+RUN apt-get -y install bash-completion zip rsyslog
 
 # Install cURL with HTTP/2 support
 RUN apt-get -y install g++ make binutils autoconf automake \
