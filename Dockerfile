@@ -59,22 +59,6 @@ RUN wget http://curl.haxx.se/download/curl-7.48.0.tar.gz && \
 # Add ubuntu user.
 RUN useradd -ms /bin/bash ubuntu
 
-#Install firefox
-RUN apt-get update && apt-get install -y firefox
-
-# Replace 1000 with your user / group id
-RUN export uid=1000 gid=1000 && \
-    mkdir -p /home/developer && \
-    echo "developer:x:${uid}:${gid}:Developer,,,:/home/developer:/bin/bash" >> /etc/passwd && \
-    echo "developer:x:${uid}:" >> /etc/group && \
-    echo "developer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/developer && \
-    chmod 0440 /etc/sudoers.d/developer && \
-    chown ${uid}:${gid} -R /home/developer
-
-USER developer
-ENV HOME /home/developer
-CMD /usr/bin/firefox
-
 # Configure Apache
 COPY default.conf /etc/apache2/sites-available/default.conf
 COPY default-ssl.conf /etc/apache2/sites-available/default-ssl.conf
@@ -97,41 +81,6 @@ RUN sed -i '166s/None/All/' /etc/apache2/apache2.conf && \
     echo "ServerName localhost" >> /etc/apache2/apache2.conf && \
     echo "ServerSignature Off" >> /etc/apache2/apache2.conf && \
     echo "ServerTokens Prod" >> /etc/apache2/apache2.conf
-
-# Install Google Page Speed for Apache
-RUN wget https://dl-ssl.google.com/dl/linux/direct/mod-pagespeed-stable_current_amd64.deb && \
-    dpkg -i mod-pagespeed-stable_current_amd64.deb && \
-    rm mod-pagespeed-stable_current_amd64.deb
-
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php
-RUN mv composer.phar /usr/local/bin/composer
-
-#Set Composer Paths
-RUN export PATH="/home/ubuntu/.composer/vendor/bin:$PATH"
-RUN echo "export PATH=\"/home/ubuntu/.composer/vendor/bin:$PATH\"" >> ~/.bashrc
-
-# Install Drush 8.
-RUN su -c "composer global require drush/drush:8.*" -s /bin/sh ubuntu
-RUN su -c "composer global update" -s /bin/sh ubuntu
-RUN ln -sf /home/ubuntu/.composer/vendor/bin/drush /usr/bin/drush
-
-#Install Drupal Console
-RUN curl https://drupalconsole.com/installer -L -o drupal.phar
-RUN mv drupal.phar /usr/local/bin/drupal
-RUN chmod +x /usr/local/bin/drupal
-
-
-# Install Twig C extension.
-#RUN wget https://github.com/twigphp/Twig/archive/v1.23.1.tar.gz && \
-#    tar zxvf v1.23.1.tar.gz && \
-#    rm v1.23.1.tar.gz && \
-#    cd Twig-1.23.1/ext/twig/ && \
-#    phpize && \
-#    ./configure && \
-#    make && \
-#    make install
-#COPY twig.ini /etc/php/7.0/fpm/conf.d/20-twig.ini
 
 RUN wget -O /var/www/opcache.php https://raw.githubusercontent.com/rlerdorf/opcache-status/master/opcache.php
 
@@ -190,6 +139,7 @@ RUN wget http://download.redis.io/releases/redis-stable.tar.gz && \
 
 # Configure with igbinary when available for PHP 7.0: https://github.com/igbinary/igbinary
 #   ./configure --enable-redis-igbinary
+
 # Currently using php7 branch (no tags). Should change to stable tag when available.
 RUN wget https://github.com/phpredis/phpredis/archive/php7.tar.gz && \
     tar zxvf php7.tar.gz && \
