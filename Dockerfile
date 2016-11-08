@@ -59,6 +59,22 @@ RUN wget http://curl.haxx.se/download/curl-7.48.0.tar.gz && \
 # Add ubuntu user.
 RUN useradd -ms /bin/bash ubuntu
 
+#Install firefox
+RUN apt-get update && apt-get install -y firefox
+
+# Replace 1000 with your user / group id
+RUN export uid=1000 gid=1000 && \
+    mkdir -p /home/developer && \
+    echo "developer:x:${uid}:${gid}:Developer,,,:/home/developer:/bin/bash" >> /etc/passwd && \
+    echo "developer:x:${uid}:" >> /etc/group && \
+    echo "developer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/developer && \
+    chmod 0440 /etc/sudoers.d/developer && \
+    chown ${uid}:${gid} -R /home/developer
+
+USER developer
+ENV HOME /home/developer
+CMD /usr/bin/firefox
+
 # Configure Apache
 COPY default.conf /etc/apache2/sites-available/default.conf
 COPY default-ssl.conf /etc/apache2/sites-available/default-ssl.conf
@@ -128,6 +144,8 @@ RUN sed -ri 's/^;opcache.enable=0/opcache.enable=1/g' /etc/php/7.0/fpm/php.ini &
     sed -ri 's/^;error_log\s*=\s*syslog/error_log = syslog/g' /etc/php/7.0/fpm/php.ini && \
     sed -ri 's/^short_open_tag\s*=\s*On/short_open_tag = Off/g' /etc/php/7.0/fpm/php.ini && \
     sed -ri 's/^memory_limit\s*=\s*128M/memory_limit = 256M/g' /etc/php/7.0/fpm/php.ini && \
+    sed -ri 's/^upload_max_filesize\s*=\s*2M/upload_max_filesize = 64M/g' /etc/php/7.0/fpm/php.ini && \
+    sed -ri 's/^max_execution_time\s*=\s*30/max_execution_time = 300/g' /etc/php/7.0/fpm/php.ini && \
     sed -ri 's/^expose_php\s*=\s*On/expose_php = Off/g' /etc/php/7.0/fpm/php.ini && \
     sed -ri 's/^;date.timezone\s*=/date.timezone = "Europe\/London"/g' /etc/php/7.0/fpm/php.ini && \
     sed -ri 's/^;error_log\s*=\s*syslog/error_log = syslog/g' /etc/php/7.0/cli/php.ini
